@@ -26,34 +26,31 @@ function AddNewSessionDialog() {
   const [note, setNote] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [suggestedDoctors, setSuggestedDoctors] = useState<doctorAgent[]>([]);
-  const [SelectedDoctor, setSelectedDoctor] = useState<doctorAgent | null>(null);
+  const [selectedDoctor, setSelectedDoctor] = useState<doctorAgent | null>(null);
 const router = useRouter(); 
 const { has } = useAuth();
 // ✅ Add this line
 const [historyList, sethistoryList]=useState<SessionDetail[]>([])
 
    //@ts-ignore
-   const paidUser=has && has({plan: 'pro'});
-   
+    const paidUser=has && has({plan: 'pro'});
+    
     useEffect(() => {
-           GetHistoryList();
-       }, []);
-   
-   
-   
-   
-       const GetHistoryList=async()=>{
-           const result= await axios.get('/api/session-chat?sessionId=all');
-           console.log(result.data);
-           
-           
-       }
+          GetHistoryList();
+        }, []);
+  
+        const GetHistoryList=async()=>{
+          const result= await axios.get('/api/session-chat?sessionId=all');
+          console.log(result.data);
+          
+        
+      }
 
 
 
 
 
-  const OnClickNext = async () => {
+  /*const OnClickNext = async () => {
     try {
       setLoading(true);
       const result = await axios.post("/api/suggest-doctors", {
@@ -66,7 +63,36 @@ const [historyList, sethistoryList]=useState<SessionDetail[]>([])
     } finally {
       setLoading(false);
     }
-  };
+  };*/
+
+const OnClickNext = async () => {
+  try {
+    setLoading(true);
+    const result = await axios.post("/api/suggest-doctors", { notes: note });
+    console.log("API response:", result.data);
+
+    // result.data is already JSON (array or object)
+    let doctors: doctorAgent[] = [];
+
+    if (Array.isArray(result.data)) {
+      doctors = result.data;
+    } else if (result.data?.doctors) {
+      doctors = result.data.doctors;
+    }
+
+    // Assign IDs if missing
+    doctors = doctors.map((d, index) => ({
+  ...d,
+  id: d.id || index + 1
+}));
+
+    setSuggestedDoctors(doctors);
+  } catch (error) {
+    console.error("API error:", error);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const onStartConsultation= async()=>{
     //Save all info to database
@@ -74,7 +100,7 @@ const [historyList, sethistoryList]=useState<SessionDetail[]>([])
     try {
       const result= await axios.post('/api/session-chat', {
   notes: note,
-  selectedDoctor: SelectedDoctor // ✅ Lowercase key, matches backend
+  selectedDoctor: selectedDoctor // ✅ Lowercase key, matches backend
 });
 
 
@@ -121,7 +147,7 @@ const [historyList, sethistoryList]=useState<SessionDetail[]>([])
   key={index}
   setSelectedDoctor={setSelectedDoctor}
   //@ts-ignore
-  selectedDoctor={SelectedDoctor}
+  selectedDoctor={selectedDoctor}
 />
 
                 ))}
@@ -140,7 +166,7 @@ const [historyList, sethistoryList]=useState<SessionDetail[]>([])
               Next {loading ? <Loader2 className="animate-spin" /> : <ArrowRight />}
             </Button>
           ) : (
-            <Button  disabled={ loading|| !SelectedDoctor} onClick={()=>onStartConsultation()}>
+            <Button  disabled={ loading|| !selectedDoctor} onClick={()=>onStartConsultation()}>
               Start Consultation
               {loading ? <Loader2 className="animate-spin ml-2" /> : <ArrowRight className="ml-2" />}
             </Button>

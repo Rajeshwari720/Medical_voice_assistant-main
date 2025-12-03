@@ -1,5 +1,6 @@
 import {openai} from "@/config/OpenAiModel";
-import {NextRequest } from "next/server";
+import { AIDoctorAgents } from "@/public/shared/list";
+import {NextRequest, NextResponse } from "next/server";
 
 export async function POST(req:NextRequest) {
     const {notes}=await req.json();
